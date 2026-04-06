@@ -1,0 +1,172 @@
+<!DOCTYPE html><html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Twisted Live Radar</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><style>
+body{
+margin:0;
+font-family:Arial, sans-serif;
+background:#050a14;
+color:white;
+}
+
+header{
+background:#020617;
+padding:12px;
+display:flex;
+gap:10px;
+align-items:center;
+border-bottom:1px solid #111;
+}
+
+#map{
+height:75vh;
+}
+
+input,button,select{
+padding:8px;
+border-radius:6px;
+border:none;
+}
+
+button{
+background:#2563eb;
+color:white;
+cursor:pointer;
+}
+
+.panel{
+background:#020617;
+padding:10px;
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+}
+
+.radar-dot{
+width:12px;
+height:12px;
+border-radius:50%;
+background:red;
+animation:pulse 1.5s infinite;
+}
+
+@keyframes pulse{
+0%{transform:scale(1);opacity:1}
+50%{transform:scale(1.6);opacity:.5}
+100%{transform:scale(1);opacity:1}
+}
+
+</style></head><body><header>
+🌪️ Twisted Live Radar
+<input id="serverCode" placeholder="Server Code">
+<button onclick="joinServer()">Connect</button>
+<button onclick="clearServer()">Clear</button>
+</header><div id="map"></div><div class="panel">
+<select id="ef">
+<option>EF0</option>
+<option>EF1</option>
+<option>EF2</option>
+<option>EF3</option>
+<option>EF4</option>
+<option>EF5</option>
+</select><select id="movement">
+<option>North</option>
+<option>South</option>
+<option>East</option>
+<option>West</option>
+<option>NE</option>
+<option>NW</option>
+<option>SE</option>
+<option>SW</option>
+</select><button onclick="addTornado()">🌪️ Add Tornado</button>
+
+</div><script>
+
+let map = L.map('map').setView([37,-97],5);
+
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+maxZoom: 19
+}).addTo(map);
+
+let server="default";
+let markers=[];
+
+function joinServer(){
+server=document.getElementById("serverCode").value || "default";
+load();
+alert("Connected to: "+server);
+}
+
+function clearServer(){
+localStorage.removeItem(server);
+load();
+}
+
+map.on('click',function(e){
+window.lat=e.latlng.lat;
+window.lng=e.latlng.lng;
+});
+
+function getColor(ef){
+if(ef=="EF0") return "#22c55e";
+if(ef=="EF1") return "#84cc16";
+if(ef=="EF2") return "#eab308";
+if(ef=="EF3") return "#f97316";
+if(ef=="EF4") return "#ef4444";
+if(ef=="EF5") return "#7f1d1d";
+}
+
+function addTornado(){
+if(!window.lat) return alert("Click map first");
+
+let data=JSON.parse(localStorage.getItem(server)||"[]");
+
+let tornado={
+lat:window.lat,
+lng:window.lng,
+ef:document.getElementById("ef").value,
+dir:document.getElementById("movement").value,
+time:Date.now()
+}
+
+data.push(tornado);
+localStorage.setItem(server,JSON.stringify(data));
+
+load();
+}
+
+function load(){
+
+markers.forEach(m=>map.removeLayer(m));
+markers=[];
+
+let data=JSON.parse(localStorage.getItem(server)||"[]");
+
+
+data.forEach(t=>{
+
+let circle=L.circle([t.lat,t.lng],{
+color:getColor(t.ef),
+fillColor:getColor(t.ef),
+fillOpacity:.4,
+radius:20000
+}).addTo(map);
+
+circle.bindPopup(`
+🌪️ ${t.ef}<br>
+Direction: ${t.dir}<br>
+Live Tracking
+`);
+
+markers.push(circle);
+
+});
+
+}
+
+setInterval(load,2000);
+
+</script></body>
+</html>
