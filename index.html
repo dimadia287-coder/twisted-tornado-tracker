@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Twisted Live Map</title>
+<style>
+body {
+    background: #0b0f1a;
+    font-family: Arial, sans-serif;
+    color: white;
+    text-align: center;
+}
+h1 { margin-top: 20px; }
+
+#map {
+    width: 900px;
+    height: 500px;
+    background: #1b2338; /* временный фон, будет видна карта */
+    margin: 20px auto;
+    position: relative;
+    border-radius: 10px;
+    border: 2px solid #444;
+}
+
+.tornado, .player {
+    position: absolute;
+    border-radius: 50%;
+}
+
+.tornado {
+    width: 30px;
+    height: 30px;
+    background: red;
+    opacity: 0.7;
+    border: 2px solid white;
+}
+
+.player {
+    width: 20px;
+    height: 20px;
+    background: blue;
+    border: 2px solid white;
+}
+
+.controls {
+    margin-bottom: 10px;
+}
+
+.info-box {
+    background: #11182c;
+    display: inline-block;
+    padding: 10px 20px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+}
+</style>
+</head>
+<body>
+
+<h1>🌪️ Twisted Live Map</h1>
+
+<div class="controls">
+    <input type="text" id="serverCode" placeholder="Введите код сервера">
+    <button onclick="connectServer()">Подключиться</button>
+</div>
+
+<div class="info-box">
+    <div id="serverName">Сервер: Не подключен</div>
+    <div id="tornadoInfo">Торнадо: Нет</div>
+</div>
+
+<div id="map"></div>
+
+<script>
+const map = document.getElementById('map');
+let tornadoes = [];
+let players = [];
+
+function connectServer() {
+    const code = document.getElementById('serverCode').value;
+    document.getElementById('serverName').innerText = "Сервер: " + code;
+
+    // Сбрасываем старые торнадо и игроков
+    tornadoes.forEach(t => t.remove());
+    players.forEach(p => p.remove());
+    tornadoes = [];
+    players = [];
+
+    // Спавним торнадо и игроков
+    spawnTornadoes();
+    spawnPlayers();
+
+    // Запускаем движение игроков
+    movePlayers();
+}
+
+function spawnTornadoes() {
+    const tornadoCount = Math.floor(Math.random() * 3) + 1; // 1-3 торнадо
+    const types = ["EF0","EF1","EF2","EF3","EF4","EF5"];
+
+    for(let i=0; i<tornadoCount; i++){
+        const t = document.createElement('div');
+        t.classList.add('tornado');
+        t.style.left = Math.random() * (map.clientWidth - 30) + "px";
+        t.style.top = Math.random() * (map.clientHeight - 30) + "px";
+        map.appendChild(t);
+        tornadoes.push(t);
+    }
+
+    const randomType = types[Math.floor(Math.random()*types.length)];
+    document.getElementById('tornadoInfo').innerText = "Торнадо: " + randomType;
+}
+
+function spawnPlayers() {
+    const playerCount = Math.floor(Math.random() * 10) + 5; // 5-15 игроков
+    for(let i=0; i<playerCount; i++){
+        const p = document.createElement('div');
+        p.classList.add('player');
+        p.style.left = Math.random() * (map.clientWidth - 20) + "px";
+        p.style.top = Math.random() * (map.clientHeight - 20) + "px";
+        map.appendChild(p);
+        players.push(p);
+    }
+}
+
+function movePlayers() {
+    setInterval(() => {
+        players.forEach(p => {
+            let x = parseFloat(p.style.left);
+            let y = parseFloat(p.style.top);
+            x += (Math.random()-0.5)*10;
+            y += (Math.random()-0.5)*10;
+            if(x<0) x=0;
+            if(y<0) y=0;
+            if(x>map.clientWidth-20) x=map.clientWidth-20;
+            if(y>map.clientHeight-20) y=map.clientHeight-20;
+            p.style.left = x + "px";
+            p.style.top = y + "px";
+        });
+    }, 500);
+}
+</script>
+
+</body>
+</html>
